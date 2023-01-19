@@ -62,7 +62,7 @@ iters = 0;
 multi_iters = 0;
 this_Npts_iters = 0;
 multi_time = tic;
-symKL_vec = [];
+err_vec = [];
 L_vec = [];
 iters_vec = [];
 
@@ -72,12 +72,6 @@ iters_vec = [];
 
 % Round up number of points to a 2^m + 1 value
 Npts = 2^ceil(log(options.N_points - 1) / log(2)) + 1;
-
-% Convert this to an odd number if it is not (avoids misleading plots and
-% extra shooting to calculate lengths)
-if mod(Npts,2) == 0
-    Npts = Npts + 1;
-end
 
 % Place the points along the requested path (specified in options)
 path = closedFormPath(p1,p2,Npts,options.initial_path);
@@ -145,15 +139,14 @@ while looping
     if any(fail_flags)
         looping = false;
         trying = false;
+        fprintf('\n -- WARNING! -- \n One or more path point updates failed. Returned geodesic is likely incorrect!\n');  
     end
     
     % Update iteration count
     loop_iter_count = loop_iter_count + sum(iter_counts);
     
     
-    
-    
-    %%% ONLY LOOP OVER ODD-INDEX POINTS IF EVEN-INDEX UPDATES SUCCESSFUL
+    %%% ONLY LOOP OVER EVEN-INDEX POINTS IF ODD-INDEX UPDATES SUCCESSFUL
     if looping
         
         %%% PREPARE LOOP FOR UPDATING EVEN-INDEX TARGET POINTS
@@ -204,6 +197,7 @@ while looping
         if any(fail_flags)
             looping = false;
             trying = false;
+            fprintf('\n -- WARNING! -- \n One or more path point updates failed. Returned geodesic is likely incorrect!\n');  
         end
         
         % Update iteration count
@@ -253,10 +247,10 @@ while looping
     pcheck = fireGeodesic( Gs{1}, 0.5*(Npts-1) );
     
     % Check the symmeterised KL between the end point and the target
-    symKL_cur = symKL(pcheck, p2);
+    err_cur = sqrt(2 * symKL(pcheck, p2));
     
     % Add this to the vector
-    symKL_vec(multi_iters) = symKL_cur;
+    err_vec(multi_iters) = err_cur;
     
     % Also store the number of iterations in total currently used
     iters_vec(multi_iters) = iters;
@@ -301,12 +295,13 @@ while looping
     %%% Terminate loop if...
     %
     % ...if tolerance is reached
-    if symKL_vec(multi_iters) <= options.symKL_tol && symKL_vec(multi_iters) >= 0
+    if err_vec(multi_iters) <= options.err_tol && err_vec(multi_iters) >= 0
         looping = false;
         
         % ...if iterations limit exceeded
     elseif multi_iters >= options.max_multi_iters
         looping = false;
+        fprintf('\n -- WARNING! -- \n Geodesic shooting routine reached maximum number of iterations before achieving tolerance. \n Returned geodesic may not be correct!\n');  
     end
     
     % ...we have reached something equivalent to a single-point problem
@@ -319,7 +314,7 @@ end
 
 % Grab out the multi-point method's idea of the geodesic between start/end
 G = struct('v',struct('mu',Gs{1}.v.mu * 0.5*(Npts-1),'SIGMA',Gs{1}.v.SIGMA * 0.5*(Npts-1)),'P',Gs{1}.P,'r',Gs{1}.r);
-G.L = sqrt(innerProduct(G.v,G.v,eye(length(G.v.mu)));
+G.L = sqrt(innerProduct(G.v,G.v,eye(length(G.v.mu))));
 
 % If the method hasn't failed, use its output as the input to a one point
 % shooting method (faster to work on it directly)
@@ -338,10 +333,10 @@ if trying
     % Append these iterations onto the iterations history vector
     iters_vec(end+1:end+onept_iters) = iters + (1:onept_iters);
     
-    % Append the associated symKL onto the end of its history vector (note
+    % Append the associated error onto the end of its history vector (note
     % that first element of history is discarded, as this is prior to any
     % iterations)
-    symKL_vec = [symKL_vec, single_diagnostics.symKL_history(2:end)];
+    err_vec = [err_vec, single_diagnostics.err_history(2:end)];
     
     % Add the one point iterations used to the total count
     iters = iters + onept_iters;
@@ -352,13 +347,14 @@ if trying
     % Otherwise, just abandon and mark a failure to converge
 else
     converged = false;
+    fprintf('\n -- WARNING! -- \n Final one-point shooting procedure failed to converge. \n Returned geodesic may not be correct!\n');  
 end
 
 % Store diagnostics
 diagnostics.runtime = toc(multi_time);
 diagnostics.iterations = iters;
 diagnostics.multi_iterations = multi_iters;
-diagnostics.symKL_history = symKL_vec;
+diagnostics.err_history = err_vec;
 diagnostics.iters_history = iters_vec;
 diagnostics.L_history = L_vec;
 diagnostics.converged = converged;

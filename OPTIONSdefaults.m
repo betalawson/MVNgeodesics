@@ -6,7 +6,7 @@ function options = OPTIONSdefaults()
 
 %%% GENERAL PARAMETERS
 
-options.symKL_tol = 1e-8;          % Tolerance to reach before terminating
+options.err_tol = 1e-5;            % Tolerance to reach before terminating
 options.visualise = false;         % Specify whether to visualise or not
 options.make_animation = false;    % Specify whether to save an animation (only used if 'visualise' is true)
 options.verbose = false;           % Specify whether to provide text output to user
@@ -37,7 +37,7 @@ options.max_iters = 5000;          % Maximum number of iterations to try
 %%% MULTI SHOOTING PARAMETERS
 
 % Looping options
-options.max_multi_iters = 500;     % Maximum number of iterations to try
+options.max_multi_iters = 100;     % Maximum number of iterations to try
 
 % Number of points to use (note: will be forced odd for multi point and to
 % next value of 2^m + 1 for adaptive multi point)

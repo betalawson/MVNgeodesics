@@ -62,9 +62,9 @@ end
 iters = 0;
 multi_iters = 0;
 multi_time = tic;
-symKL_vec = [];
+err_vec = [];
 L_vec = [];
-symKL_cur = Inf;
+err_cur = Inf;
 
 %%% INITIALISE PATH
 
@@ -86,6 +86,7 @@ Gs = cell(1,Npts-1);
 %%% MAIN LOOP
 
 looping = true;
+converged = false;
 while looping
     
     %%% UPDATE ITERATION COUNT FOR MULTI-SHOOT LOOP
@@ -139,6 +140,7 @@ while looping
     % Trip the loop to stop if any failure case was hit
     if any(fail_flags)
         looping = false;
+        fprintf('\n -- WARNING! -- \n One or more path point updates failed. Returned geodesic is likely incorrect!\n');  
     end
     
     % Update iteration count
@@ -195,6 +197,7 @@ while looping
         % Trip the loop to stop if any failure case was hit
         if any(fail_flags)
             looping = false;
+            fprintf('\n -- WARNING! -- \n One or more path point updates failed. Returned geodesic is likely incorrect!\n');  
         end
         
         % Update iteration count
@@ -221,10 +224,6 @@ while looping
                 plotGeodesic( Gs{k}, [0 1], 'Npts', 10 );
             end
             
-            % Also plot the full geodesic obtained from the first geodesic
-            
-            %plotGeodesic(Gs{1},[0 0.5*(Npts-1)],'Npts',25, 'pathColor', [1 0 0]);
-            
             % Plot the positions of all points on top, including the target
             for k = 1:Npts
                 plotMVN(path{k});
@@ -245,10 +244,10 @@ while looping
     pcheck = fireGeodesic( Gs{1}, 0.5*(Npts-1) );
     
     % Check the symmeterised KL between the end point and the target
-    symKL_cur = symKL(pcheck, p2);
+    err_cur = sqrt(2 * symKL(pcheck, p2));
     
     % Add this to the vector
-    symKL_vec(multi_iters) = symKL_cur;
+    err_vec(multi_iters) = err_cur;
     
     % Also store the number of iterations in total currently used
     iters_vec(multi_iters) = iters;
@@ -268,27 +267,29 @@ while looping
     %%% Terminate loop if...
     %
     % ...if tolerance is reached
-    if symKL_vec(multi_iters) <= options.symKL_tol && symKL_vec(multi_iters) >= 0
+    if err_vec(multi_iters) <= options.err_tol && err_vec(multi_iters) >= 0
         looping = false;
         converged = true;
         
     % ...if iterations limit exceeded
     elseif multi_iters >= options.max_multi_iters
         looping = false;
-        converged = false;
+        fprintf('\n -- WARNING! -- \n Geodesic shooting routine reached maximum number of iterations before achieving tolerance. \n Returned geodesic may not be correct!\n');  
     end
     
 end
 
 % Grab out the multi-point method's idea of the geodesic between start/end
 G = struct('v',struct('mu',Gs{1}.v.mu * 0.5*(Npts-1),'SIGMA',Gs{1}.v.SIGMA * 0.5*(Npts-1)),'P',Gs{1}.P,'r',Gs{1}.r);    
-G.L = sqrt(innerProduct(G.v,G.v,eye(length(G.v.mu)));
+G.L = sqrt(innerProduct(G.v,G.v,eye(length(G.v.mu))));
     
 % Store diagnostics
 diagnostics.runtime = toc(multi_time);
 diagnostics.iterations = iters;
 diagnostics.multi_iterations = multi_iters;
-diagnostics.symKL_history = symKL_vec;
+diagnostics.err_history = err_vec;
 diagnostics.iters_history = iters_vec;
 diagnostics.L_history = L_vec;
-diagnostics.converged = converged;    
+diagnostics.converged = converged;
+
+end
