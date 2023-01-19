@@ -62,7 +62,7 @@ iters = 0;
 multi_iters = 0;
 this_Npts_iters = 0;
 multi_time = tic;
-err_vec = [];
+symKL_vec = [];
 L_vec = [];
 iters_vec = [];
 
@@ -72,6 +72,12 @@ iters_vec = [];
 
 % Round up number of points to a 2^m + 1 value
 Npts = 2^ceil(log(options.N_points - 1) / log(2)) + 1;
+
+% Convert this to an odd number if it is not (avoids misleading plots and
+% extra shooting to calculate lengths)
+if mod(Npts,2) == 0
+    Npts = Npts + 1;
+end
 
 % Place the points along the requested path (specified in options)
 path = closedFormPath(p1,p2,Npts,options.initial_path);
@@ -146,7 +152,9 @@ while looping
     loop_iter_count = loop_iter_count + sum(iter_counts);
     
     
-    %%% ONLY LOOP OVER EVEN-INDEX POINTS IF ODD-INDEX UPDATES SUCCESSFUL
+    
+    
+    %%% ONLY LOOP OVER ODD-INDEX POINTS IF EVEN-INDEX UPDATES SUCCESSFUL
     if looping
         
         %%% PREPARE LOOP FOR UPDATING EVEN-INDEX TARGET POINTS
@@ -247,10 +255,10 @@ while looping
     pcheck = fireGeodesic( Gs{1}, 0.5*(Npts-1) );
     
     % Check the symmeterised KL between the end point and the target
-    err_cur = sqrt(2 * symKL(pcheck, p2));
+    symKL_cur = symKL(pcheck, p2);
     
     % Add this to the vector
-    err_vec(multi_iters) = err_cur;
+    symKL_vec(multi_iters) = symKL_cur;
     
     % Also store the number of iterations in total currently used
     iters_vec(multi_iters) = iters;
@@ -295,7 +303,7 @@ while looping
     %%% Terminate loop if...
     %
     % ...if tolerance is reached
-    if err_vec(multi_iters) <= options.err_tol && err_vec(multi_iters) >= 0
+    if symKL_vec(multi_iters) <= options.symKL_tol && symKL_vec(multi_iters) >= 0
         looping = false;
         
         % ...if iterations limit exceeded
@@ -333,10 +341,10 @@ if trying
     % Append these iterations onto the iterations history vector
     iters_vec(end+1:end+onept_iters) = iters + (1:onept_iters);
     
-    % Append the associated error onto the end of its history vector (note
+    % Append the associated symKL onto the end of its history vector (note
     % that first element of history is discarded, as this is prior to any
     % iterations)
-    err_vec = [err_vec, single_diagnostics.err_history(2:end)];
+    symKL_vec = [symKL_vec, single_diagnostics.symKL_history(2:end)];
     
     % Add the one point iterations used to the total count
     iters = iters + onept_iters;
@@ -354,7 +362,7 @@ end
 diagnostics.runtime = toc(multi_time);
 diagnostics.iterations = iters;
 diagnostics.multi_iterations = multi_iters;
-diagnostics.err_history = err_vec;
+diagnostics.symKL_history = symKL_vec;
 diagnostics.iters_history = iters_vec;
 diagnostics.L_history = L_vec;
 diagnostics.converged = converged;

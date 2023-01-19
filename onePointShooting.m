@@ -80,6 +80,12 @@ else
     
 end
 
+
+
+%%% INITIALISE WITH A ZERO GEODESIC
+
+
+
 %%% SHOOTING PROCEDURE
 
 % Continually refine the geodesic until the symmeterised KL divergence
@@ -117,13 +123,13 @@ while looping
         end
     end
     
-    % Calculate the current proxy distance to the target
-    err_cur = sqrt( 2 * symKL( p, pt ) );
-    err_vec(iters + 1) = err_cur;
+    % Calculate the current distance to the target
+    symKL_cur = symKL( p, pt );
+    symKL_vec(iters+1) = symKL_cur;
     
     % Shooting iteration proceeds if current error is not sufficiently
     % small, and number of iterations not exceeded
-    if iters < options.max_iters && err_cur > options.err_tol
+    if iters < options.max_iters && symKL_cur > options.symKL_tol
         
         % Find the approximate geodesic connecting these points
         Gconnect = approximateGeodesic( p, pt, options.approx_method );
@@ -163,7 +169,7 @@ while looping
         
         % If verbose flag set, output the error for this iteration
         if options.verbose
-            fprintf('Shooting... current proxy manifold distance is %g\n', err_cur);
+            fprintf('Shooting... current symKL value is %g\n', symKL_cur);
         end
         
     % Otherwise, terminate loop and output a warning if terminating due to
@@ -173,7 +179,7 @@ while looping
         if iters >= options.max_iters 
             fprintf('\n -- WARNING! -- \n Geodesic shooting routine reached maximum number of iterations before achieving tolerance. \n Returned geodesic may not be correct!\n');            
             converged = false;
-        elseif ~(err_vec(end) < options.err_tol)
+        elseif ~(symKL_vec(end) < options.symKL_tol)
             fprintf('\n -- WARNING! -- \n Geodesic shooting routine returned a geodesic that does not meet the tolerance. \n Blow-up has likely occurred (e.g. velocity went to NaN)\n');
             converged = false;    
         else
@@ -198,7 +204,7 @@ G = struct('v',G.v,'P',P,'r',r,'L',sqrt(innerProduct(G.v,G.v,eye(D))));
 % Output diagnostics
 diagnostics.iterations = iters;
 diagnostics.runtime = toc;
-diagnostics.final_err = err_vec(end);
-diagnostics.err_history = err_vec;
+diagnostics.final_symKL = symKL_vec(end);
+diagnostics.symKL_history = symKL_vec;
 diagnostics.s_history = s_vec;
 diagnostics.converged = converged;

@@ -4,16 +4,19 @@ function options = OPTIONSdefaults()
 % options can be manually overriden in calls to those functions, or the
 % default behaviours may be adjusted here.
 
+
 %%% GENERAL PARAMETERS
 
-options.err_tol = 1e-5;            % Tolerance to reach before terminating
+options.symKL_tol = 1e-8;          % Tolerance to reach before terminating
 options.visualise = false;         % Specify whether to visualise or not
 options.make_animation = false;    % Specify whether to save an animation (only used if 'visualise' is true)
 options.verbose = false;           % Specify whether to provide text output to user
 
+
 %%% INITIAL GEODESIC
 
 options.Ginit = [];                % This should not be changed. However, you may provide a geodesic with which to initialise the onePointShooting method by setting this value in the input options
+
 
 %%% SINGLE SHOOTING PARAMETERS
 
@@ -33,7 +36,6 @@ options.max_vnorm = 0.5;
 options.max_iters = 5000;          % Maximum number of iterations to try
 
 
-
 %%% MULTI SHOOTING PARAMETERS
 
 % Looping options
@@ -50,6 +52,7 @@ options.N_points = 128;
 %   'hybrid' - Average of the geometric and moment paths in (mu,SIGMA)
 options.initial_path = 'euclid';
 
+
 %%% ADAPTIVE MULTI SHOOTING PARAMETERS
 
 % Required relative improvement (reduction) in length per path refinement
@@ -60,4 +63,3 @@ options.req_L_improvement = 1e-2;   % (Require at least a 1% reduction)
 options.min_Npts_iters = 5;
 
 end
-

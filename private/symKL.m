@@ -17,10 +17,4 @@ invSIGMA2 = p2.SIGMA \ eye(d);
 % Calculate the symmeterised KL
 sKL = 0.25 * ( trace( invSIGMA1 * p2.SIGMA ) + trace( invSIGMA2 * p1.SIGMA ) + ( p1.mu - p2.mu )' * (invSIGMA1 + invSIGMA2) * ( p1.mu - p2.mu ) - 2*d);
 
-% If the value came out negative (may occur for badly behaved matrices),
-% treat it as infinite
-if sKL < 0
-    sKL = Inf;
-end
-
 end

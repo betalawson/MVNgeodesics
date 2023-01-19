@@ -62,9 +62,9 @@ end
 iters = 0;
 multi_iters = 0;
 multi_time = tic;
-err_vec = [];
+symKL_vec = [];
 L_vec = [];
-err_cur = Inf;
+symKL_cur = Inf;
 
 %%% INITIALISE PATH
 
@@ -224,6 +224,10 @@ while looping
                 plotGeodesic( Gs{k}, [0 1], 'Npts', 10 );
             end
             
+            % Also plot the full geodesic obtained from the first geodesic
+            
+            %plotGeodesic(Gs{1},[0 0.5*(Npts-1)],'Npts',25, 'pathColor', [1 0 0]);
+            
             % Plot the positions of all points on top, including the target
             for k = 1:Npts
                 plotMVN(path{k});
@@ -244,10 +248,10 @@ while looping
     pcheck = fireGeodesic( Gs{1}, 0.5*(Npts-1) );
     
     % Check the symmeterised KL between the end point and the target
-    err_cur = sqrt(2 * symKL(pcheck, p2));
+    symKL_cur = symKL(pcheck, p2);
     
     % Add this to the vector
-    err_vec(multi_iters) = err_cur;
+    symKL_vec(multi_iters) = symKL_cur;
     
     % Also store the number of iterations in total currently used
     iters_vec(multi_iters) = iters;
@@ -267,7 +271,7 @@ while looping
     %%% Terminate loop if...
     %
     % ...if tolerance is reached
-    if err_vec(multi_iters) <= options.err_tol && err_vec(multi_iters) >= 0
+    if symKL_vec(multi_iters) <= options.symKL_tol && symKL_vec(multi_iters) >= 0
         looping = false;
         converged = true;
         
@@ -287,7 +291,7 @@ G.L = sqrt(innerProduct(G.v,G.v,eye(length(G.v.mu))));
 diagnostics.runtime = toc(multi_time);
 diagnostics.iterations = iters;
 diagnostics.multi_iterations = multi_iters;
-diagnostics.err_history = err_vec;
+diagnostics.symKL_history = symKL_vec;
 diagnostics.iters_history = iters_vec;
 diagnostics.L_history = L_vec;
 diagnostics.converged = converged;
