@@ -26,14 +26,14 @@ options.Ginit = [];                % This should not be changed. However, you ma
 %   'eigen' - Eigendecomposition-based velocity
 %   'taylor' - Taylor series approach assuming small velocity in mu space
 %   'transport' - Parallel transport based approach
-options.approx_method = 'euclid';
+options.approx_method = 'eigen';
 
 % Maximum norm of the velocity vector before its contribution to the
 % velocity update is downweighted
 options.max_vnorm = 0.5;
 
 % Looping options
-options.max_iters = 5000;          % Maximum number of iterations to try
+options.max_iters = 1000;          % Maximum number of iterations to try
 
 
 %%% MULTI SHOOTING PARAMETERS

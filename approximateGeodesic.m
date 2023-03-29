@@ -73,7 +73,6 @@ switch lower(method)
         v.mu = ( eye(D) - ( eye(D) - pt.SIGMA ) \ eye(D) ) * logSIGMA * ( pt.SIGMA \ pt.mu );
         v.SIGMA = logSIGMA;
         
-        
     % Eigenvector-based approximation
     case {'eigen','decomposition'}
         
@@ -85,7 +84,7 @@ switch lower(method)
         delta_t = DELTA_t * pt.mu;
         
         % Find a rotation that will align this with a standard basis vector
-        S = randomOrthogonalMatrix( delta_t );
+        S = randomOrthogonalMatrix( length(delta_t), delta_t );
         
         % Apply this rotation
         delta_t = S' * delta_t;

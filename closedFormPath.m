@@ -24,6 +24,9 @@ function path = closedFormPath(p1, p2, Npts, path_type)
 %                   of the 'geometric' and 'moment' paths in attempt to
 %                   balance their pros and cons
 %
+%     'transport' : Geodesics as defined by the 2-Wasserstein metric
+%                   (optimal transport)
+%
 % If the path_type is not specified, the 'hybrid' path will be chosen
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -94,6 +97,23 @@ switch lower(path_type)
             path{k}.mu = 0.5 * ( path_moment{k}.mu + path_anneal{k}.mu );
             path{k}.SIGMA = 0.5 * ( path_moment{k}.SIGMA + path_anneal{k}.SIGMA );
             
+        end
+        
+        
+    case {'transport','wasserstein','w2'}
+        
+        % Pre-calculate the matrix used in "affine interpolation"
+        p2half = p2.SIGMA^(1/2);
+        C = p2half * ( p2half * p1.SIGMA * p2half )^(-1/2) * p2half;
+        
+        % Has a closed form, given for example in Delon & Desolneux (2020)
+        for k = 1:Npts
+            % Read out current time value (for notational ease)
+            t = tvec(k);
+            % Optimal transport is a linear interpolation of mean
+            path{k}.mu = (1 - t) * p1.mu + t * p2.mu;
+            % Covariance matrix transforms by a set formula
+            path{k}.SIGMA = ( (1-t) * eye(d) + t * C ) * p1.SIGMA * ( (1 - t) * eye(d) + t * C );
         end
         
 end

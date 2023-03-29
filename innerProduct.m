@@ -14,6 +14,11 @@ function value = innerProduct(u,v,invSIGMA)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% Default to using the origin for SIGMA if no inverse SIGMA was provided
+if nargin < 3
+    invSIGMA = eye(size(u.SIGMA));
+end
+
 % Calculate inner product by sticking u, v and the precision into the metric
 value = u.mu' * invSIGMA * v.mu + 1/2 * trace( invSIGMA * u.SIGMA * invSIGMA * v.SIGMA );
 

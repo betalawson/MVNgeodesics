@@ -1,24 +1,13 @@
-function plotGeodesic(varargin)
+function plotPath(varargin)
 %
-%     plotGeodesic(G, options)
-%     plotGeodesic(G, range, options)
-%     plotGeodesic(ax, ...)
+%       plotPath(path, options) - plots the provided path object
 %
-% This function plots the provided geodesic object 'G'. If no range is
-% specified, the geodesic will be plotted over the range [0,1]. The user
-% may optionally specify an axis to plot on, otherwise the current axis
-% will be used (as per MATLAB's standard plot function).
+%       plotPath(ax, ...) - as above, but plotting to the given axis object 'ax'
 %
-% Options should be provided as name-value pairs, and include:
-%
-%             Npts - Number of points to plot along the given range
-%        pathColor - Color of the line through mu-space on the plot
-%        pathWidth - Width of the line through mu-space on the plot
-%     ellipseColor - Color of the covariance ellipses on the plot
-%     ellipseWidth - Width of the covariance ellipses on the plot
-%     covFrequency - How many points between each covariance ellipse
+% options are any of the following, provided as name-value pairs:
+%      Npts, ellipseColor, ellipseWidth, pathColor, pathWidth
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 %%% INPUT HANDLING
 
@@ -39,25 +28,9 @@ else
     
 end
 
-% Next input is always the geodesic
-G = inputs{1};
+% Next input is always the path
+path = inputs{1};
 inputs = inputs(2:end);
-
-% Check if the next input is a range, if not assume the range is [0,1]
-range_given = false;
-if ~isempty(inputs) > 0
-    if ismatrix(inputs{1}) && length(inputs{1}) == 2
-        range_given = true;
-    end
-end
-
-if range_given
-    range = inputs{1};
-    inputs = inputs(2:end);
-else
-    range = [0, 1];
-end
-
 
 
 %%% ADDITIONAL INPUTS
@@ -66,8 +39,7 @@ end
 extra_options = inputParser();
 
 % Add parameters to this object
-addParameter(extra_options, 'lineSpec', '-');
-addParameter(extra_options, 'Npts', 201);
+addParameter(extra_options, 'Npts', 51);
 addParameter(extra_options, 'ellipseColor', [0.4 0.4 0.4] );
 addParameter(extra_options, 'ellipseWidth', 0.85) ;
 addParameter(extra_options, 'pathColor', [0 0 1] );
@@ -77,17 +49,12 @@ addParameter(extra_options, 'scale', 0.15);
 addParameter(extra_options, 'pointSize', 20);
 addParameter(extra_options, 'startColor', [1, 0, 0]);
 addParameter(extra_options, 'endColor', [0 0 0]);
-addParameter(extra_options, 'covFrequency', 20);
+addParameter(extra_options, 'covFrequency', 10);
 
 % Read out the parameter informaiton provided
 parse(extra_options, inputs{:});
 plot_options = extra_options.Results;
 
-
-%%% GEODESIC EVALUATION
-
-% Use geodesic tracing function to get a set of (mu, SIGMA) values along the path
-path = traceGeodesic( G, range, plot_options.Npts );
 
 %%% PLOTTING
 
@@ -138,7 +105,7 @@ switch length(path{1}.mu)
         end
         
         % Plot the mu path
-        plot(ax, mu_path(:,1), mu_path(:,2), plot_options.lineSpec, 'color', plot_options.pathColor, 'LineWidth', plot_options.pathWidth, 'LineStyle', plot_options.pathStyle  );
+        plot(ax, mu_path(:,1), mu_path(:,2), 'color', plot_options.pathColor, 'LineWidth', plot_options.pathWidth, 'LineStyle', plot_options.pathStyle  );
         % Plot the starting and ending points
         plot(ax, mu_path(1,1), mu_path(1,2), '.', 'MarkerSize', plot_options.pointSize, 'MarkerEdgeColor', plot_options.startColor);
         plot(ax, mu_path(end,1), mu_path(end,2), '.', 'MarkerSize', plot_options.pointSize, 'MarkerEdgeColor', plot_options.endColor);
