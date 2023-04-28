@@ -62,6 +62,7 @@ else
             end
             pt.SIGMA = 0.5 * (pt.SIGMA + pt.SIGMA');
             
+            
             % Make sure the eigenvalues are all positive
             [V, LAM] = eig(pt.SIGMA);
             if any(LAM < 0)

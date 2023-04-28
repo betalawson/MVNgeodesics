@@ -27,6 +27,10 @@ function path = closedFormPath(p1, p2, Npts, path_type)
 %     'transport' : Geodesics as defined by the 2-Wasserstein metric
 %                   (optimal transport)
 %
+%           'CON' : Calvo-Olliver-Nielsen path, formed by projecting a path
+%                   embedded in a higher-dimensional manifold back onto
+%                   the d-variate MVN manifold
+%
 % If the path_type is not specified, the 'hybrid' path will be chosen
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -114,6 +118,28 @@ switch lower(path_type)
             path{k}.mu = (1 - t) * p1.mu + t * p2.mu;
             % Covariance matrix transforms by a set formula
             path{k}.SIGMA = ( (1-t) * eye(d) + t * C ) * p1.SIGMA * ( (1 - t) * eye(d) + t * C );
+        end
+        
+    case {'con','projection','tracemetric'}
+        
+        % First map p1 and p2 to a new space where p1 starts at the origin
+        [O,p2,P,r] = affineToOrigin(p1,p2);
+        
+        % Find the locations of p1 and p2 in higher-dimensional manifold
+        P1 = eye( size(O.SIGMA)+1 );
+        P2 = [ p2.SIGMA + p2.mu * p2.mu', p2.mu; p2.mu', 1];
+        
+        % Find the geodesic path in the higher-dimensional manifold
+        % (equipped with trace metric)
+        for k = 1:Npts
+            % Read out current time value (for notational ease)
+            t = tvec(k);
+            % Geodesic path defined by trace metric for P
+            P_t = P1^(0.5*(1-t)) * P2^t * P1^(0.5*(1-t));
+            % Convert from P back to p, using whatever is in the bottom right
+            % as the value of beta. Also undo the affine transform
+            path{k}.mu = P * (P_t(1:end-1,end) / P_t(end,end)) + r;
+            path{k}.SIGMA = P * (P_t(1:end-1,1:end-1) - (P_t(1:end-1,end) * P_t(1:end-1,end)') / P_t(end,end)) * P';
         end
         
 end

@@ -54,7 +54,6 @@ s_vec = [];
 
 [O,pt,P,r] = affineToOrigin(p1,p2);
 
-
 %%% INITIALISATION OF GEODESIC
 
 % If a geodesic provided, use it as the initial geodesic - with initial
@@ -113,7 +112,7 @@ while looping
         % Plot the start and end points
         plotMVN( p1 );
         plotMVN( p2 );
-        
+
         if options.make_animation
             frame = getframe(gcf);
             writeVideo(vid_obj,frame);
@@ -159,6 +158,7 @@ while looping
         % Reduce the step length when the velocity used for the update has too
         % large a magnitude (implying we should not over-index on this update)
         s = min( 1, options.max_vnorm / vconnect_norm ) * s;
+        s = min( 1, s );
         
         % Apply this velocity update
         G.v = struct('mu',G.v.mu + s*dv.mu,'SIGMA',G.v.SIGMA + s*dv.SIGMA);

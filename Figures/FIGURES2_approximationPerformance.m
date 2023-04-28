@@ -1,4 +1,4 @@
-function FIGURE5b_approximationPerformance(regenerate)
+function FIGURES2_approximationPerformance(regenerate)
 %
 % This function picks out random geodesics of different length, then
 % formulates the approximate solutions using different methods and
@@ -17,16 +17,16 @@ N_samples = 5000;
 
 % Define the colours
 plot_colors = [ 
-                0.40, 0.40, 0.40;        % Grey - Euclidean
-                1.00, 0.00, 0.00;        % Red - Taylor
-                0.00, 0.00, 1.00;        % Blue - Eigen
+                0.40, 0.40, 0.40;        % Grey - Taylor
+                1.00, 0.00, 0.00;        % Red - Eigen
+                0.00, 0.00, 1.00;        % Blue - Projection
               ];  
           
 % List method names
-methods = {'euclid','taylor','eigen'};
+methods = {'taylor','eigen','con'};
 
 % Corresponding method names for display on legend
-legend_names = {'Euclidean', 'Taylor', 'Eigen'};
+legend_names = {'Small-x', 'Component-based', 'Projection'};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -59,7 +59,7 @@ if ~exist('data_approximationPerformance.mat','file') || regenerate
         p = randomPoint(mu_bound, SIGMA_bound, D);
         
         % Find the true geodesic to this point (provides length)
-        G = onePointShooting(O,p,struct('approx_method','eigen','max_vnorm',0.5));
+        G = onePointShooting(O,p,struct('approx_method','con','max_vnorm',0.5));
         problemL(m) = sqrt(innerProduct(G.v,G.v,eye(D)));
         
         % Loop over each choice of approximation

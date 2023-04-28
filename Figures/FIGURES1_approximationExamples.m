@@ -1,4 +1,4 @@
-function FIGURE5a_exampleGeodesics
+function FIGURES1_approximationExamples
 %
 % This function plots a series of geodesics in the space of bivariate MVNs,
 % together with the geodesics obtained by approximately selecting the
@@ -9,7 +9,6 @@ function FIGURE5a_exampleGeodesics
 targets{1} = struct('mu', [-0.4;0.75],'SIGMA', [1, 0.6; 0.6, 0.6]);
 targets{2} = struct('mu', [1;-0.5],'SIGMA', [2.5,0;0,0.5]);
 targets{3} = struct('mu', [-1, -0.5],'SIGMA', [1.2, 0; 0, 0.8]);
-%targets{4} = struct('mu', ,'SIGMA', );
 
 % Create another point that deliberately has a straight line solution
 targets{4} = struct('mu', [1; 1], 'SIGMA', [1.45, -0.75; -0.75, 1.45]);
@@ -20,13 +19,14 @@ plot_colors = [
                 0.40, 0.40, 0.40;        % Grey - Euclidean
                 1.00, 0.40, 0.40;        % Red - Taylor
                 0.40, 0.40, 1.00;        % Blue - Eigen
+                1.00, 0.00, 1.00;        % Magenta - projection
               ];  
           
 % List method names
-methods = {'euclid','taylor','eigen'};
+methods = {'euclid','taylor','eigen','projection'};
 
 % Corresponding method names for display on legend
-legend_names = {'Euclidean', 'Taylor', 'Eigen'};
+legend_names = {'Euclidean', 'Small-x', 'Component-based', 'Projection'};
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

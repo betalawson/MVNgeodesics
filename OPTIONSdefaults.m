@@ -23,17 +23,18 @@ options.Ginit = [];                % This should not be changed. However, you ma
 % Method used for approximate geodesics that inform velocity corrections.
 % Approaches included are:
 %   'straight' - Velocity assuming Euclidean space (also 'euclid')
-%   'eigen' - Eigendecomposition-based velocity
-%   'taylor' - Taylor series approach assuming small velocity in mu space
-%   'transport' - Parallel transport based approach
-options.approx_method = 'eigen';
+%      'eigen' - Eigendecomposition-based velocity
+%     'taylor' - Taylor series approach assuming small velocity in mu space
+%  'transport' - Parallel transport based approach
+% 'projection' - Derived by projecting from higher-D manifold (Nielsen2023)
+options.approx_method = 'projection';
 
 % Maximum norm of the velocity vector before its contribution to the
 % velocity update is downweighted
 options.max_vnorm = 0.5;
 
 % Looping options
-options.max_iters = 1000;          % Maximum number of iterations to try
+options.max_iters = 500;           % Maximum number of iterations to try
 
 
 %%% MULTI SHOOTING PARAMETERS
@@ -46,10 +47,11 @@ options.max_multi_iters = 100;     % Maximum number of iterations to try
 options.N_points = 128;
 
 % Path between p1 and p2 used for point initialisation. Options are:
-%   'euclid' - Direct interpolation of (mu, SIGMA) between p1 and p2
-%   'geometric' - Direct interpolation of (delta, DELTA) between p1 and p2
-%   'moment' - Interpolation of the first and second moments of MVNs
-%   'hybrid' - Average of the geometric and moment paths in (mu,SIGMA)
+%     'euclid' - Direct interpolation of (mu, SIGMA) between p1 and p2
+%  'geometric' - Direct interpolation of (delta, DELTA) between p1 and p2
+%     'moment' - Interpolation of the first and second moments of MVNs
+%     'hybrid' - Average of the geometric and moment paths in (mu,SIGMA)
+% 'projection' - Derived by projecting from higher-D manifold (Nielsen2023)
 options.initial_path = 'euclid';
 
 

@@ -31,6 +31,10 @@ function G = approximateGeodesic(p1, p2, method)
 %                   become a velocity correction from p1 to approximately
 %                   hit p2.    ** COMPARABLY EXPENSIVE **
 %
+%    'projection' : The velocity is calculated using the embedding into a
+%                   higher-dimensional manifold, for which geodesic paths
+%                   are known but leave the MVN manifold (Nielsen 2023)
+%
 % This function is used inside the function onePointshooting() for numeric
 % calculation of the geodesic between two points. If called directly, with
 % no 'method' input specified, the 'eigen' method will be chosen.
@@ -211,6 +215,15 @@ switch lower(method)
         v.mu = v1.mu + s * dv.mu;
         v.SIGMA = v1.SIGMA + s * dv.SIGMA;       
                     
+    case {'projection','con','tracemetric'}
+        
+        % Find the rate of change in the projected space
+        P_t = [ pt.SIGMA + pt.mu * pt.mu', pt.mu; pt.mu', 1 ];
+        dPdt = logm( P_t );
+        % Convert this back into a velocity in the MVN space
+        v.mu = dPdt(1:end-1,end);
+        v.SIGMA = dPdt(1:end-1,1:end-1);
+                
     otherwise
         error('Incorrect specification of approximation method');
 

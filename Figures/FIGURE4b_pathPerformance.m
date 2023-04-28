@@ -1,4 +1,4 @@
-function FIGURE2b_pathLengthVsDistance(regenerate)
+function FIGURE4b_pathPerformance(regenerate)
 % This function generates a large number of end points for geodesics
 % (beginning at the origin), and produces a box plot comparing the lengths
 % of various non-geodesic paths
