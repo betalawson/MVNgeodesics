@@ -39,7 +39,7 @@ inputs = inputs(2:end);
 extra_options = inputParser();
 
 % Add parameters to this object
-addParameter(extra_options, 'Npts', 51);
+addParameter(extra_options, 'Npts', 201);
 addParameter(extra_options, 'ellipseColor', [0.4 0.4 0.4] );
 addParameter(extra_options, 'ellipseWidth', 0.85) ;
 addParameter(extra_options, 'pathColor', [0 0 1] );
@@ -49,7 +49,7 @@ addParameter(extra_options, 'scale', 0.15);
 addParameter(extra_options, 'pointSize', 20);
 addParameter(extra_options, 'startColor', [1, 0, 0]);
 addParameter(extra_options, 'endColor', [0 0 0]);
-addParameter(extra_options, 'covFrequency', 10);
+addParameter(extra_options, 'covFrequency', 20);
 
 % Read out the parameter informaiton provided
 parse(extra_options, inputs{:});

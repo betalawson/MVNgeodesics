@@ -1,5 +1,6 @@
 function plotGeodesic(varargin)
 %
+%     plotGeodesic(G)
 %     plotGeodesic(G, options)
 %     plotGeodesic(G, range, options)
 %     plotGeodesic(ax, ...)
@@ -70,6 +71,10 @@ addParameter(extra_options, 'lineSpec', '-');
 addParameter(extra_options, 'Npts', 201);
 addParameter(extra_options, 'ellipseColor', [0.4 0.4 0.4] );
 addParameter(extra_options, 'ellipseWidth', 0.85) ;
+addParameter(extra_options, 'ellipsoidPoints', 20);
+addParameter(extra_options, 'ellipsoidEdgeWidth', 1);
+addParameter(extra_options, 'ellipsoidFaceOpacity', 0.2);
+addParameter(extra_options, 'ellipsoidEdgeOpacity', 0.2);
 addParameter(extra_options, 'pathColor', [0 0 1] );
 addParameter(extra_options, 'pathWidth', 2 );
 addParameter(extra_options, 'pathStyle', '-' );
@@ -165,7 +170,7 @@ switch length(path{1}.mu)
                 STD = sqrt(diag(LAM)) * plot_options.scale;
                 
                 % Plot the ellipsoid in non-rotated, non-translated space
-                [x,y,z] = ellipsoid( 0,0,0, STD(1), STD(2), STD(3) );
+                [x,y,z] = ellipsoid( 0,0,0, STD(1), STD(2), STD(3), plot_options.ellipsoidPoints );
                 matsize = size(x);
                 X = [x(:),y(:),z(:)];
                 
@@ -179,7 +184,7 @@ switch length(path{1}.mu)
                 z = reshape(z, matsize);
                 
                 % Plot this as a surface
-                surf(x,y,z, 'FaceAlpha', 0.5, 'EdgeAlpha', 0.5, 'FaceColor', plot_options.ellipseColor);
+                surf(ax,x,y,z, 'FaceAlpha', plot_options.ellipsoidFaceOpacity, 'EdgeAlpha', plot_options.ellipsoidEdgeOpacity, 'FaceColor', plot_options.ellipseColor, 'LineWidth', plot_options.ellipsoidEdgeWidth);
                 
             end
             

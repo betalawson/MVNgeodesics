@@ -1,4 +1,4 @@
-function path = closedFormPath(p1, p2, Npts, path_type)
+function path = closedFormPath(p1, p2, Npts, path_type, epsilon)
 %
 %     path = closedFormPath(p1, p2, path_type)
 %
@@ -27,6 +27,9 @@ function path = closedFormPath(p1, p2, Npts, path_type)
 %     'transport' : Geodesics as defined by the 2-Wasserstein metric
 %                   (optimal transport)
 %
+%       'entropy' : Entropy-regularised 2-Wasserstein, provide entropy
+%                   level as an additional input parameter
+%
 %           'CON' : Calvo-Olliver-Nielsen path, formed by projecting a path
 %                   embedded in a higher-dimensional manifold back onto
 %                   the d-variate MVN manifold
@@ -42,7 +45,7 @@ tvec = linspace(0,1,Npts);
 path = cell(1,Npts);
 
 % Read out the dimension (used for some methods)
-d = size(p1.SIGMA);
+d = size(p1.SIGMA,1);
 
 switch lower(path_type)
     
@@ -89,7 +92,7 @@ switch lower(path_type)
             % along the direction between the means
             path{k}.SIGMA = (1 - t) * p1.SIGMA + t * p2.SIGMA + t * (1-t) * ( (p2.mu - p1.mu) * (p2.mu - p1.mu)' );
         end
-        
+                
     case {'hybrid','mixed','balanced'}
         
         % Most easily defined using recursive calls to this function
@@ -102,7 +105,6 @@ switch lower(path_type)
             path{k}.SIGMA = 0.5 * ( path_moment{k}.SIGMA + path_anneal{k}.SIGMA );
             
         end
-        
         
     case {'transport','wasserstein','w2'}
         
@@ -120,14 +122,93 @@ switch lower(path_type)
             path{k}.SIGMA = ( (1-t) * eye(d) + t * C ) * p1.SIGMA * ( (1 - t) * eye(d) + t * C );
         end
         
-    case {'con','projection','tracemetric'}
+    case {'entropy','entropy-wasserstein','ew2'}
+        
+        % Has a closed form, given in Allasto (2022)
+        for k = 1:Npts
+            % Read out current time value (for notational ease)
+            t = tvec(k);
+            % Optimal transport is a linear interpolation of mean
+            path{k}.mu = (1 - t) * p1.mu + t * p2.mu;
+            % Covariance matrix transforms by a set formula
+            path{k}.SIGMA = (1-t)^2 * p1.SIGMA + t^2 * p2.SIGMA + t * (1-t) * ( (epsilon^2/16 * eye(d) + p1.SIGMA * p2.SIGMA)^(1/2) + (epsilon^2/16 * eye(d) + p2.SIGMA * p1.SIGMA)^(1/2) );
+        end
+        
+    case {'symkl'}
+        
+        % Define optimisation parameters
+        tol = 1e-9;
+        learn_rate = 0.1;
+        
+        % First map p1 and p2 to a new space where p1 starts at the origin
+        [O,p2,P,r] = affineToOrigin(p1,p2);
+        
+        % Pre-calculate the target covariance inverse for speed
+        invSIGMA_P = p2.SIGMA \ eye(size(p2.SIGMA));
+        
+        % Just store the endpoints as is
+        path{1}.mu = zeros(d,1);
+        path{1}.SIGMA = eye(d);
+        path{Npts}.mu = p2.mu;
+        path{Npts}.SIGMA = p2.SIGMA;
+                       
+        % Use a loop to find all intermediate points, taking the previous
+        % point as the initialisation
+        for k = 2:Npts-1
+            
+            % Read out current time value
+            t = tvec(k);
+            % Initialise at the previous point
+            M = struct('mu',path{k-1}.mu,'SIGMA',path{k-1}.SIGMA);          
+            % Initialise the old data to junk to guarantee first iteration
+            M_old = struct('mu',-1e6*ones(d,1), 'SIGMA', 1e6*eye(d));
+        
+            % Commence gradient descent loop
+            while symKL(M,M_old) > tol
+        
+                % Update 'old' value
+                M_old = M;
+            
+                % Pre-compute the inverse of the current matrix
+                invSIGMA_M = M.SIGMA \ eye(d);
+            
+                % Calculate the gradients
+                grad_mu_L = 0.5 * (1-t) * (invSIGMA_M + eye(d)) * M.mu + 0.5 * t * (invSIGMA_M + invSIGMA_P) * (M.mu - p2.mu);
+                grad_SIGMA_term1 = -(1-t) * (M.mu * M.mu' + eye(d)) - t * ( (p2.mu - M.mu)*(p2.mu - M.mu)' + p2.SIGMA );
+                grad_SIGMA_term2 = (1-t) * eye(d) + t * invSIGMA_P;
+                grad_SIGMA_L = 0.25 * (invSIGMA_M * grad_SIGMA_term1 * invSIGMA_M + grad_SIGMA_term2);
+            
+                % Ensure gradient updates to covariance are symmetric
+                grad_SIGMA_L = numericalProtection(grad_SIGMA_L);
+                        
+                % Take a gradient step using the learning rate
+                M.mu = M.mu - learn_rate * grad_mu_L;
+                M.SIGMA = M.SIGMA - learn_rate * grad_SIGMA_L;
+                M.SIGMA = numericalProtection(M.SIGMA);
+                
+            end
+            
+            % Store result of gradient descent
+            path{k}.mu = M.mu;
+            path{k}.SIGMA = M.SIGMA;
+            
+        end
+        
+        % Convert the path back to original space
+        for k = 1:Npts
+            path{k}.mu = P * path{k}.mu + r;
+            path{k}.SIGMA = P * path{k}.SIGMA * P';
+        end
+        
+            
+        
+    case {'con','projection','tracemetric','embedding'}
         
         % First map p1 and p2 to a new space where p1 starts at the origin
         [O,p2,P,r] = affineToOrigin(p1,p2);
         
         % Find the locations of p1 and p2 in higher-dimensional manifold
-        P1 = eye( size(O.SIGMA)+1 );
-        P2 = [ p2.SIGMA + p2.mu * p2.mu', p2.mu; p2.mu', 1];
+        Pt = [ p2.SIGMA + p2.mu * p2.mu', p2.mu; p2.mu', 1];
         
         % Find the geodesic path in the higher-dimensional manifold
         % (equipped with trace metric)
@@ -135,7 +216,7 @@ switch lower(path_type)
             % Read out current time value (for notational ease)
             t = tvec(k);
             % Geodesic path defined by trace metric for P
-            P_t = P1^(0.5*(1-t)) * P2^t * P1^(0.5*(1-t));
+            P_t = Pt^t;
             % Convert from P back to p, using whatever is in the bottom right
             % as the value of beta. Also undo the affine transform
             path{k}.mu = P * (P_t(1:end-1,end) / P_t(end,end)) + r;

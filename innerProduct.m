@@ -9,8 +9,9 @@ function value = innerProduct(u,v,invSIGMA)
 %
 % The inner product is the one that induces the Riemannian metric on this 
 % statistical manifold. Given the warping of space, the calculation depends
-% on the precision  matrix where the angle is being calculated. If no input
-% precision invSIGMA is provided, the origin invSIGMA = eye(D) is used.
+% on the precision  matrix where the inner product is being calculated. If 
+% no input precision invSIGMA is provided, the origin invSIGMA = eye(D) is
+% used.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 

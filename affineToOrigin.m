@@ -1,7 +1,8 @@
-function [O,varargout] = affineToOrigin(p1,p2)
+function [O,varargout] = affineToOrigin(p1,p2,diagonalise)
 % 
 %     [O,P,r] = affineToOrigin(p1)
 %     [O,pt,P,r] = affineToOrigin(p1,p2)
+%     [O,pt,P,r] = affineToOrigin(p1,p2,diagonalise)
 %
 % This function takes as input at least one multivariate normal, p1,
 % specified as a struct with a 'mu' field and a 'SIGMA' field. An affine
@@ -14,10 +15,17 @@ function [O,varargout] = affineToOrigin(p1,p2)
 % same affine transform.
 %
 % Note: There is an infinite number of ways to select the transform P -
-% any arbitrary rotation of a decomposition P P^T = SIGMA is valid. This
-% function uses the matrix square root, so as to return a symmetric result.
+% any arbitrary rotation of a decomposition P P^T = SIGMA is valid. By
+% default, this function uses the matrix square root, so as to return a
+% symmetric result. Provided the flag 'diagonalise' set to true, however,
+% the transform that diagonalises the provided p2 will be selected.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Assume not to diagonalise by default
+if nargin < 3
+    diagonalise = false;
+end
 
 % Find a decomposition P P^T = SIGMA1
 P = p1.SIGMA^(1/2);
@@ -38,6 +46,21 @@ if nargin > 1
     % Apply the inverse transform to p2
     pt.mu = invP * (p2.mu - p1.mu);
     pt.SIGMA = invP * p2.SIGMA * invP';
+    
+    % If diagonalising, now find this additional rotation to apply
+    if diagonalise
+       
+        % Find the eigendecomposition of SIGMA
+        [V,LAM] = eig(pt.SIGMA);
+        
+        % Set the new point's covariance to be this diagonal matrix
+        pt.SIGMA = LAM;
+        % Apply this rotation also to mu
+        pt.mu = V'*pt.mu;
+        % Update the stored transformation matrix
+        P = P*V;
+        
+    end
     
     % Gather outputs
     varargout{1} = pt;

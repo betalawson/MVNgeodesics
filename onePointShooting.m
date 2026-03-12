@@ -80,11 +80,6 @@ else
 end
 
 
-
-%%% INITIALISE WITH A ZERO GEODESIC
-
-
-
 %%% SHOOTING PROCEDURE
 
 % Continually refine the geodesic until the symmeterised KL divergence
@@ -153,12 +148,12 @@ while looping
         J = jacobiField(G,dv,1);
         
         % Project the residual onto the Jacobi field to select a step length
-        s = innerProduct(R,J,invSIGMA) / innerProduct(J,J,invSIGMA);
+        s = innerProduct(vconnect,J,invSIGMA) / innerProduct(J,J,invSIGMA);
         
         % Reduce the step length when the velocity used for the update has too
         % large a magnitude (implying we should not over-index on this update)
         s = min( 1, options.max_vnorm / vconnect_norm ) * s;
-        s = min( 1, s );
+        %s = min( 1, s );
         
         % Apply this velocity update
         G.v = struct('mu',G.v.mu + s*dv.mu,'SIGMA',G.v.SIGMA + s*dv.SIGMA);
